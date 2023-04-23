@@ -1,0 +1,42 @@
+version: "3"
+services:
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    depends_on:
+      - fastapi
+    ports:
+      - "80:80"
+      - "443:443"
+    # volumes:
+    #     - ./nginx.conf:/etc/nginx/nginx.conf
+    restart: always
+
+  fastapi:
+    container_name: fastapi
+    build:
+      context: ./fastapi
+      dockerfile: dockerfile
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./fastapi/src:/src
+    restart: always
+
+  postgres:
+    container_name: postgres
+    build: ./postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+volumes:
+  postgres-db-volume:
